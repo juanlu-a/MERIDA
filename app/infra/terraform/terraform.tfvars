@@ -12,7 +12,7 @@ lambda_log_retention_days = 7
 # ZIP Deployment - Terraform empaqueta automáticamente
 # ====================================
 lambda_handler     = "app.lambda_handler"
-lambda_runtime     = "python3.9"  # Using python3.9 to match local system
+lambda_runtime     = "python3.11"  # python3.11 is available in GitHub Actions and AWS Lambda
 lambda_source_path = "../lambdas/lambda_iot_handler"
 
 # AWS Academy LabRole ARN
