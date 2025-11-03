@@ -359,22 +359,23 @@ resource "aws_vpc_endpoint" "cloudwatch_logs" {
   )
 }
 
-# IoT Core endpoint - para que dispositivos IoT accedan desde VPC
-resource "aws_vpc_endpoint" "iot_core" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.${var.aws_region}.iot"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
-  private_dns_enabled = true
-
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.vpc_name}-IoT-Core-Endpoint"
-    }
-  )
-}
+# IoT Core endpoint - DISABLED: IoT Core VPC Endpoint not available in all regions
+# IoT Core can still be accessed over the internet gateway
+# resource "aws_vpc_endpoint" "iot_core" {
+#   vpc_id              = aws_vpc.main.id
+#   service_name        = "com.amazonaws.${var.aws_region}.iot"
+#   vpc_endpoint_type   = "Interface"
+#   subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+#   security_group_ids  = [aws_security_group.vpc_endpoints.id]
+#   private_dns_enabled = true
+#
+#   tags = merge(
+#     var.tags,
+#     {
+#       Name = "${var.vpc_name}-IoT-Core-Endpoint"
+#     }
+#   )
+# }
 
 # ===========================================
 # Data Sources

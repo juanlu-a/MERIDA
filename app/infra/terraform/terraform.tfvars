@@ -12,13 +12,13 @@ lambda_log_retention_days = 7
 # ZIP Deployment - Terraform empaqueta automáticamente
 # ====================================
 lambda_handler     = "app.lambda_handler"
-lambda_runtime     = "python3.11"  # python3.11 is available in both GitHub Actions and AWS Lambda
+lambda_runtime     = "python3.9"  # Using python3.9 to match local system
 lambda_source_path = "../lambdas/lambda_iot_handler"
 
 # AWS Academy LabRole ARN
 # Get this from AWS Console: IAM > Roles > LabRole > Copy ARN
 # Valor se sobrescribe desde .env (TF_VAR_lab_role_arn)
-lab_role_arn = "arn:aws:iam::000000000000:role/LabRole" # Valor genérico - usar .env
+lab_role_arn = "arn:aws:iam::037689899742:role/LabRole"
 
 # DynamoDB Configuration
 dynamodb_table_name    = "SmartGrowData"
