@@ -5,13 +5,13 @@ Sistema de IoT para gestión inteligente de cultivos utilizando AWS IoT Core, La
 ## Arquitectura
 
 ```
-Raspberry Pi (Sensores)
-    ↓ publish
-AWS IoT Core (system/plot/<plot_id>)
-    ↓ IoT Rule
-Lambda IoT Handler
-    ↓ write
-DynamoDB (SmartGrowData)
+Raspberry Pi (Sensores)          Usuario (Web/Mobile)
+    ↓ publish (MQTT)                  ↓ https
+AWS IoT Core                      AWS Amplify (Frontend)
+    ↓ IoT Rule                        ↓ auth
+Lambda IoT Handler                AWS Cognito
+    ↓ write                           ↓ API calls
+DynamoDB (SmartGrowData) ←────────────┘
 ```
 
 ## Componentes
@@ -23,14 +23,18 @@ Infraestructura como código para desplegar todos los recursos AWS:
 - **IoT Core**: Policies, Topic Rules, Certificates
 - **Lambda**: Function para procesar mensajes IoT (Docker/ECR)
 - **DynamoDB**: Base de datos con Single-Table Design
+- **Cognito**: User Pool para autenticación de usuarios
+- **Amplify**: Hosting y deployment del frontend React
 - **IAM**: Permisos y roles
 
 ```bash
-cd infrastructure
+cd app/infra/terraform
 terraform init
 terraform plan
 terraform apply
 ```
+
+Ver documentación completa en [app/infra/terraform/README.md](app/infra/terraform/README.md)
 
 ### 2. Lambda IoT Handler
 
@@ -81,30 +85,123 @@ cd lambdas/lambda_iot_handler
 - **GSI_PK**: `FACILITY#<facility_id>`
 - **GSI_SK**: `TIMESTAMP#<timestamp>`
 
+### 4. Frontend (React + TypeScript + Vite)
+
+Aplicación web para monitoreo y gestión de cultivos:
+
+**Stack:**
+- React 18 + TypeScript
+- Vite (build tool)
+- Tailwind CSS
+- React Router
+- Zustand (state management)
+- React Query (data fetching)
+- Recharts (visualización de datos)
+- AWS Amplify (authentication)
+
+**Características:**
+- Dashboard con visualización en tiempo real de sensores
+- Gestión de plots y facilities
+- Autenticación con AWS Cognito
+- Gráficas históricas de datos de sensores
+- Responsive design
+
+```bash
+cd app/web
+npm install
+npm run dev
+```
+
+Ver documentación completa en [app/web/README.md](app/web/README.md)
+
+### 5. CI/CD (GitHub Actions)
+
+Workflows automatizados para deployment:
+
+**Workflows:**
+- **deploy-frontend.yml**: Deploy del frontend a AWS Amplify
+  - Trigger: Push a main (cambios en app/web)
+  - Build, test, y deploy automático
+  - Requiere aprobación manual (environment: production)
+
+- **terraform-plan.yml**: Plan de cambios en infraestructura
+  - Trigger: Pull Request (cambios en app/infra/terraform)
+  - Comenta el plan en el PR
+  - Apply manual via workflow_dispatch
+
+**Configuración de Secrets (AWS Academy):**
+
+```bash
+# Usar el script helper
+./scripts/update-github-secrets.sh ~/Downloads/credentials.csv
+```
+
+Secrets requeridos:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` (AWS Academy)
+- `LAB_ROLE_ARN`
+- `GH_PAT` (GitHub Personal Access Token)
+- `VITE_COGNITO_USER_POOL_ID` (auto-poblado por Terraform)
+- `VITE_COGNITO_CLIENT_ID` (auto-poblado por Terraform)
+
 ## Estructura del Proyecto
 
 ```
-Merida/
-├── infrastructure/           # Terraform IaC
-│   ├── main.tf              # Configuración principal
-│   ├── variables.tf         # Variables de entrada
-│   ├── outputs.tf           # Outputs
-│   ├── terraform.tfvars     # Valores de variables (no commitear con datos reales)
-│   └── modules/             # Módulos Terraform
-│       ├── lambda/          # Módulo Lambda (wrapper del oficial)
-│       ├── dynamodb/        # Módulo DynamoDB
-│       ├── iot/             # Módulo IoT Core
-│       └── s3/              # Módulo S3
-├── lambdas/                 # Código de las Lambdas
-│   └── lambda_iot_handler/  # Lambda para procesar IoT
-│       ├── app.py           # Código Python
-│       ├── Dockerfile       # Imagen Docker
-│       ├── requirements.txt # Dependencias
-│       ├── deploy.sh        # Script de deployment
-│       └── README.md        # Documentación
-├── .env.example             # Template de variables de entorno
-├── .gitignore               # Archivos ignorados por git
-└── README.md                # Este archivo
+MERIDA/
+├── .github/
+│   └── workflows/           # GitHub Actions CI/CD
+│       ├── deploy-frontend.yml    # Deploy frontend a Amplify
+│       └── terraform-plan.yml     # Terraform plan en PRs
+├── app/
+│   ├── web/                 # Frontend React + TypeScript
+│   │   ├── src/
+│   │   │   ├── components/  # Componentes React
+│   │   │   ├── pages/       # Páginas (Dashboard, Plots, Auth)
+│   │   │   ├── layouts/     # Layouts (MainLayout, AuthLayout)
+│   │   │   ├── hooks/       # Custom hooks (useAuth, useQueries)
+│   │   │   ├── services/    # API services (Axios)
+│   │   │   ├── store/       # Zustand stores
+│   │   │   ├── types/       # TypeScript types
+│   │   │   ├── config/      # Configuración (Auth, API)
+│   │   │   └── utils/       # Utilidades
+│   │   ├── package.json
+│   │   ├── vite.config.ts
+│   │   ├── amplify.yml      # Configuración AWS Amplify
+│   │   └── README.md
+│   ├── server/              # Backend FastAPI (Python)
+│   │   ├── src/
+│   │   │   ├── dal/         # Data Access Layer
+│   │   │   ├── routers/     # API endpoints
+│   │   │   ├── schemas/     # Pydantic models
+│   │   │   └── utils/       # Utilities
+│   │   └── requirements.txt
+│   └── infra/               # Infraestructura
+│       ├── terraform/       # Terraform IaC
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   ├── outputs.tf
+│       │   ├── backend.tf
+│       │   ├── terraform.tfvars  # (no commitear)
+│       │   ├── README.md
+│       │   └── modules/
+│       │       ├── cognito/      # User authentication
+│       │       ├── amplify/      # Frontend hosting
+│       │       ├── dynamodb/     # Database
+│       │       ├── lambda/       # Lambda functions
+│       │       ├── iot/          # IoT Core rules
+│       │       └── s3/           # Storage
+│       └── lambdas/
+│           └── lambda_iot_handler/
+│               ├── app.py
+│               ├── Dockerfile
+│               ├── requirements.txt
+│               ├── deploy.sh
+│               └── README.md
+├── scripts/
+│   └── update-github-secrets.sh  # Helper para actualizar secrets
+├── .gitignore
+└── README.md
 ```
 
 ## Setup
