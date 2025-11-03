@@ -13,22 +13,22 @@ module "ecs" {
   enable_container_insights = var.ecs_enable_container_insights
 
   # Task Definition Configuration
-  task_family        = var.ecs_task_family
-  container_name     = var.ecs_container_name
-  container_image    = var.ecs_container_image
-  container_cpu      = var.ecs_container_cpu
-  container_memory   = var.ecs_container_memory
-  container_port     = var.ecs_container_port
+  task_family           = var.ecs_task_family
+  container_name        = var.ecs_container_name
+  container_image       = var.ecs_container_image
+  container_cpu         = var.ecs_container_cpu
+  container_memory      = var.ecs_container_memory
+  container_port        = var.ecs_container_port
   container_environment = var.ecs_container_environment
 
   # Service Configuration
-  service_name   = var.ecs_service_name
-  desired_count  = var.ecs_desired_count
+  service_name  = var.ecs_service_name
+  desired_count = var.ecs_desired_count
 
   # Networking Configuration
-  vpc_id              = module.vpc.vpc_id
-  subnet_ids          = module.vpc.private_subnet_ids
-  security_group_ids  = [module.vpc.ecs_container_security_group_id]
+  vpc_id                = module.vpc.vpc_id
+  subnet_ids            = module.vpc.private_subnet_ids
+  security_group_ids    = [module.vpc.ecs_container_security_group_id]
   ecs_security_group_id = module.vpc.ecs_container_security_group_id
 
   # IAM Roles
@@ -36,10 +36,10 @@ module "ecs" {
   task_role_arn      = var.ecs_task_role_arn != "" ? var.ecs_task_role_arn : var.lab_role_arn
 
   # Load Balancer Configuration - ALWAYS ENABLED
-  create_alb                = true
-  alb_name                  = var.ecs_alb_name
-  alb_subnet_ids            = module.vpc.public_subnet_ids
-  alb_idle_timeout          = var.ecs_alb_idle_timeout
+  create_alb                     = true
+  alb_name                       = var.ecs_alb_name
+  alb_subnet_ids                 = module.vpc.public_subnet_ids
+  alb_idle_timeout               = var.ecs_alb_idle_timeout
   alb_enable_deletion_protection = var.ecs_alb_enable_deletion_protection
 
   # Health Check Configuration

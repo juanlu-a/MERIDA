@@ -96,9 +96,9 @@ resource "aws_cognito_user_pool_client" "web_client" {
   supported_identity_providers = ["COGNITO"]
 
   # Token validity
-  access_token_validity  = 60  # 60 minutes
-  id_token_validity      = 60  # 60 minutes
-  refresh_token_validity = 30  # 30 days
+  access_token_validity  = 60 # 60 minutes
+  id_token_validity      = 60 # 60 minutes
+  refresh_token_validity = 30 # 30 days
 
   token_validity_units {
     access_token  = "minutes"

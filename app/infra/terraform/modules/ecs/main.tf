@@ -124,14 +124,14 @@ resource "aws_ecs_service" "this" {
   load_balancer {
     target_group_arn = aws_lb_target_group.this.arn
     container_name   = var.container_name
-    container_port   = var.container_port 
+    container_port   = var.container_port
   }
 
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
 
   # Dependencies handled via dynamic blocks, no need for conditional depends_on
-  
+
   tags = merge(
     var.tags,
     {
@@ -228,8 +228,8 @@ resource "aws_lb_target_group" "this" {
 # ===========================================
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.alb.arn
-  port             = 80
-  protocol         = "HTTP"
+  port              = 80
+  protocol          = "HTTP"
 
   default_action {
     type             = "forward"
@@ -241,12 +241,12 @@ resource "aws_lb_listener" "http" {
 # Security Group Rule: ALB to ECS Tasks 
 # ===========================================
 resource "aws_security_group_rule" "alb_to_tasks_ingress" {
-  type              = "ingress"
-  from_port         = var.container_port
-  to_port           = var.container_port
-  protocol          = "tcp"
-  security_group_id = var.ecs_security_group_id
+  type                     = "ingress"
+  from_port                = var.container_port
+  to_port                  = var.container_port
+  protocol                 = "tcp"
+  security_group_id        = var.ecs_security_group_id
   source_security_group_id = aws_security_group.alb.id
-  description       = "Allow ALB to talk to ECS tasks on container port"
+  description              = "Allow ALB to talk to ECS tasks on container port"
 }
 

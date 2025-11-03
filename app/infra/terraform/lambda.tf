@@ -6,7 +6,7 @@ module "lambda_iot_handler" {
 
   function_name = var.lambda_function_name
   description   = "IoT Handler Lambda - Processes messages from system/plot/+ topics"
-  
+
   # ZIP deployment - Terraform empaqueta automáticamente desde source_path
   source_path = var.lambda_source_path
   handler     = var.lambda_handler

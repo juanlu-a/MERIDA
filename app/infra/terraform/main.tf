@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -49,10 +49,10 @@ module "amplify" {
   environment_variables = merge(
     var.amplify_environment_variables,
     {
-      VITE_AWS_REGION             = var.aws_region
-      VITE_COGNITO_USER_POOL_ID   = module.cognito.user_pool_id
-      VITE_COGNITO_CLIENT_ID      = module.cognito.user_pool_client_id
-      VITE_API_BASE_URL           = var.api_base_url
+      VITE_AWS_REGION           = var.aws_region
+      VITE_COGNITO_USER_POOL_ID = module.cognito.user_pool_id
+      VITE_COGNITO_CLIENT_ID    = module.cognito.user_pool_client_id
+      VITE_API_BASE_URL         = var.api_base_url
     }
   )
 

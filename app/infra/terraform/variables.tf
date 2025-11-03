@@ -308,45 +308,45 @@ variable "ecs_log_retention_days" {
   default     = 7
 }
 
-  # ===========================================
-  # ECR Configuration
-  # ===========================================
+# ===========================================
+# ECR Configuration
+# ===========================================
 
-  variable "ecr_repository_name" {
-    description = "Name of the ECR repository for backend image"
-    type        = string
-    default     = "merida-backend"
-  }
+variable "ecr_repository_name" {
+  description = "Name of the ECR repository for backend image"
+  type        = string
+  default     = "merida-backend"
+}
 
-  variable "ecr_image_tag_mutability" {
-    description = "ECR image tag mutability (MUTABLE or IMMUTABLE)"
-    type        = string
-    default     = "MUTABLE"
-  }
+variable "ecr_image_tag_mutability" {
+  description = "ECR image tag mutability (MUTABLE or IMMUTABLE)"
+  type        = string
+  default     = "MUTABLE"
+}
 
-  variable "ecr_scan_on_push" {
-    description = "Scan images on push to ECR"
-    type        = bool
-    default     = true
-  }
+variable "ecr_scan_on_push" {
+  description = "Scan images on push to ECR"
+  type        = bool
+  default     = true
+}
 
-  variable "ecr_encryption_type" {
-    description = "ECR encryption type (AES256 or KMS)"
-    type        = string
-    default     = "AES256"
-  }
+variable "ecr_encryption_type" {
+  description = "ECR encryption type (AES256 or KMS)"
+  type        = string
+  default     = "AES256"
+}
 
-  variable "ecr_image_count" {
-    description = "Number of tagged images to keep in ECR"
-    type        = number
-    default     = 10
-  }
+variable "ecr_image_count" {
+  description = "Number of tagged images to keep in ECR"
+  type        = number
+  default     = 10
+}
 
-  variable "ecr_untagged_image_days" {
-    description = "Number of days to keep untagged images in ECR"
-    type        = number
-    default     = 7
-  }
+variable "ecr_untagged_image_days" {
+  description = "Number of days to keep untagged images in ECR"
+  type        = number
+  default     = 7
+}
 
 # ===========================================
 # Cognito Variables
