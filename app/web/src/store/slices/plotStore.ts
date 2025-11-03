@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { PlotMetadata } from '@/types'
+import type { PlotMetadata } from '@/types'
 
 interface PlotState {
   plots: PlotMetadata[]

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { plotService } from '@/services/plotService'
 import { userService } from '@/services/userService'
-import { CreatePlotRequest, UpdatePlotRequest } from '@/types'
+import type { CreatePlotRequest, UpdatePlotRequest } from '@/types'
 
 // User queries
 export function useUser(userId: string) {

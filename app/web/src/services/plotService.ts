@@ -1,5 +1,5 @@
 import { apiClient } from './api'
-import { PlotMetadata, PlotState, CreatePlotRequest, UpdatePlotRequest } from '@/types'
+import type { PlotMetadata, PlotState, CreatePlotRequest, UpdatePlotRequest } from '@/types'
 
 export const plotService = {
   // Get all plots for a user

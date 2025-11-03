@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { usePlots, useCreatePlot, useDeletePlot } from '@/hooks/useQueries'
 import { usePlotStore } from '@/store/slices/plotStore'
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { CreatePlotRequest } from '@/types'
+import type { CreatePlotRequest } from '@/types'
 
 export function PlotsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
