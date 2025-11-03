@@ -67,7 +67,7 @@ jobs:
         id: plan
         env:
           TF_VAR_lab_role_arn: ${{ secrets.LAB_ROLE_ARN }}
-          TF_VAR_github_access_token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
+          TF_VAR_github_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
         run: terraform plan -no-color -input=false
         continue-on-error: true
 
@@ -141,5 +141,5 @@ jobs:
       - name: Terraform Apply
         env:
           TF_VAR_lab_role_arn: ${{ secrets.LAB_ROLE_ARN }}
-          TF_VAR_github_access_token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
+          TF_VAR_github_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
         run: terraform apply -auto-approve -input=false
