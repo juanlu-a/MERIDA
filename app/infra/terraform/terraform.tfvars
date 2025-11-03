@@ -16,6 +16,7 @@ lambda_runtime     = "python3.11"
 lambda_source_path = "../lambdas/lambda_iot_handler"
 
 # AWS Academy LabRole ARN
+# For AWS Academy, the role ARN should be: arn:aws:iam::<ACCOUNT_ID>:role/LabRole
 # This value can be overridden from environment with TF_VAR_lab_role_arn
 # Note: If using voclabs assumed role, you may need to update this
 lab_role_arn = "arn:aws:iam::037689899742:role/LabRole"
