@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'app/infra/terraform/**'
-      - '.github/workflows/terraform-plan.yml'
+      - "app/infra/terraform/**"
+      - ".github/workflows/terraform-plan.yml"
   workflow_dispatch:
 
 # Add permissions for the workflow
@@ -16,8 +16,8 @@ permissions:
   issues: write
 
 env:
-  AWS_REGION: 'us-east-1'
-  TERRAFORM_VERSION: '1.9'
+  AWS_REGION: "us-east-1"
+  TERRAFORM_VERSION: "1.9"
 
 jobs:
   terraform-plan:
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4

@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'app/web/**'
-      - '.github/workflows/deploy-frontend.yml'
+      - "app/web/**"
+      - ".github/workflows/deploy-frontend.yml"
   workflow_dispatch: # Allow manual trigger
 
 # Add permissions for the workflow
@@ -17,8 +17,8 @@ permissions:
 
 # Environment for manual approval
 env:
-  NODE_VERSION: '20'
-  AWS_REGION: 'us-east-1'
+  NODE_VERSION: "20"
+  AWS_REGION: "us-east-1"
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: app/web/package-lock.json
 
       - name: Install dependencies
