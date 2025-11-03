@@ -1,0 +1,194 @@
+name: Deploy Frontend to AWS Amplify
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/web/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch: # Allow manual trigger
+
+# Environment for manual approval
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: app/web
+        run: npm ci
+
+      - name: Run linting
+        working-directory: app/web
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: app/web
+        run: npm run type-check
+
+      - name: Build application
+        working-directory: app/web
+        env:
+          # These would be set as secrets/variables in GitHub
+          VITE_AWS_REGION: ${{ vars.VITE_AWS_REGION || 'us-east-1' }}
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_CLIENT_ID: ${{ secrets.VITE_COGNITO_CLIENT_ID }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'http://localhost:8000' }}
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: app/web/dist
+          retention-days: 7
+
+  deploy:
+    name: Deploy to AWS Amplify
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.app_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # For AWS Academy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: app/web/dist
+
+      - name: Get Amplify App ID
+        id: get-amplify-id
+        run: |
+          # Try to get Amplify app ID from AWS
+          APP_ID=$(aws amplify list-apps --query "apps[?name=='merida-smart-grow-frontend'].appId" --output text 2>/dev/null || echo "")
+          if [ -z "$APP_ID" ]; then
+            echo "⚠️ Amplify app not found. Please create it via Terraform or AWS Console."
+            echo "Alternatively, you can deploy to S3+CloudFront."
+            exit 1
+          fi
+          echo "app_id=$APP_ID" >> $GITHUB_OUTPUT
+          echo "✅ Found Amplify App ID: $APP_ID"
+
+      - name: Trigger Amplify Build
+        id: deploy
+        run: |
+          APP_ID="${{ steps.get-amplify-id.outputs.app_id }}"
+          BRANCH_NAME="main"
+
+          # Start a new build/deployment
+          JOB_ID=$(aws amplify start-job \
+            --app-id "$APP_ID" \
+            --branch-name "$BRANCH_NAME" \
+            --job-type RELEASE \
+            --query 'jobSummary.jobId' \
+            --output text)
+
+          echo "🚀 Started Amplify deployment (Job ID: $JOB_ID)"
+
+          # Wait for deployment to complete (with timeout)
+          TIMEOUT=600 # 10 minutes
+          ELAPSED=0
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATUS=$(aws amplify get-job \
+              --app-id "$APP_ID" \
+              --branch-name "$BRANCH_NAME" \
+              --job-id "$JOB_ID" \
+              --query 'job.summary.status' \
+              --output text)
+
+            echo "Status: $STATUS (${ELAPSED}s elapsed)"
+
+            if [ "$STATUS" = "SUCCEED" ]; then
+              echo "✅ Deployment succeeded!"
+              break
+            elif [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "CANCELLED" ]; then
+              echo "❌ Deployment failed with status: $STATUS"
+              exit 1
+            fi
+
+            sleep 15
+            ELAPSED=$((ELAPSED + 15))
+          done
+
+          # Get the app URL
+          APP_URL=$(aws amplify get-branch \
+            --app-id "$APP_ID" \
+            --branch-name "$BRANCH_NAME" \
+            --query "branch.defaultDomain" \
+            --output text)
+
+          echo "app_url=https://$BRANCH_NAME.$APP_URL" >> $GITHUB_OUTPUT
+          echo "🌐 Deployed to: https://$BRANCH_NAME.$APP_URL"
+
+      - name: Comment PR/Commit with deployment URL
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.app_url }}';
+            const comment = `🚀 **Frontend deployed successfully!**\n\n**URL:** ${url}\n\n*Commit: ${context.sha.substring(0, 7)}*`;
+
+            // Comment on the commit
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            });
+
+  # Alternative deployment to S3 (if Amplify is not available in AWS Academy)
+  deploy-s3-fallback:
+    name: Deploy to S3 (Fallback)
+    runs-on: ubuntu-latest
+    needs: build
+    if: failure() # Only run if Amplify deploy fails
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dist
+
+      - name: Deploy to S3
+        run: |
+          # This is a fallback - you would need to create an S3 bucket first
+          echo "⚠️ Amplify deployment failed. Consider deploying to S3 bucket instead."
+          echo "Run: aws s3 sync dist/ s3://your-bucket-name/ --delete"
