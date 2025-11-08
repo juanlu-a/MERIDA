@@ -1,17 +1,18 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from uuid import UUID
+from typing import Optional
 
 class FacilityBase(BaseModel):
-    facility_id: str
     name: str
     location: str
 
 class FacilityCreate(FacilityBase):
+    """Modelo usado para crear una instalación (sin ID, lo genera el sistema)."""
     pass
-
-class FacilityUpdate(BaseModel):
-    name: Optional[str]
-    location: Optional[str]
 
 class FacilityRead(FacilityBase):
-    pass
+    facility_id: UUID = Field(..., description="Identificador único de la instalación")
+
+class FacilityUpdate(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None

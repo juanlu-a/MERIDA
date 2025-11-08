@@ -3,9 +3,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from dal.dynamo import table
-from schemas.user import UserRead
-from utils.keys import pk_user
+from src.dal.dynamo import table
+from src.schemas.user import UserRead
+from src.utils.keys import pk_user
 
 
 _PROFILE_SK = "PROFILE"
