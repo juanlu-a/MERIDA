@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from botocore.exceptions import ClientError
+import json
 from boto3.dynamodb.conditions import Key, Attr
 from src.schemas.facilities import FacilityBase, FacilityCreate, FacilityRead, FacilityUpdate
 from src.dal.database import table
@@ -17,19 +19,36 @@ router = APIRouter(prefix="/facilities", tags=["Instalaciones"])
 @router.get("/", description="Obtener todas las instalaciones")
 async def get_facilities():
     try:
-        response = table.scan(
-            FilterExpression=Attr("pk").begins_with("FACILITY#") & Attr("sk").eq("Metadata")
+        response = table.query(
+            IndexName="GSI_TypeIndex",
+            KeyConditionExpression=Key("type").eq("FACILITY")
         )
+
         facilities = response.get("Items", [])
 
-        return {
-            "count": len(facilities),
-            "facilities": facilities
-        }
+        # Manejo de paginación si hay más resultados
+        while "LastEvaluatedKey" in response:
+            response = table.query(
+                IndexName="GSI_TypeIndex",
+                KeyConditionExpression=Key("type").eq("FACILITY"),
+                ProjectionExpression="#pk, #sk, #n, #l",
+                ExpressionAttributeNames={
+                    "#pk": "pk",
+                    "#sk": "sk",
+                    "#n": "name",
+                    "#l": "location"
+                }
+            )
+            facilities.extend(response.get("Items", []))
+
+        return {"count": len(facilities), "facilities": facilities}
+
+    except ClientError as e:
+        msg = e.response.get("Error", {}).get("Message", str(e))
+        raise HTTPException(status_code=500, detail=f"Error consulting DynamoDB: {msg}")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error obteniendo las instalaciones: {e}")
-
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 @router.post("/", description="Crear una nueva instalación")
 async def create_facility(facility: FacilityCreate):
@@ -42,6 +61,7 @@ async def create_facility(facility: FacilityCreate):
             "facility_id": facility_id,
             "name": facility.name,
             "location": facility.location,
+            "type": "FACILITY"
         }
 
         table.put_item(Item=item)
@@ -51,7 +71,7 @@ async def create_facility(facility: FacilityCreate):
             "facility": item
         } 
 
-    except Exception as e:
+    except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error creating facility: {e}")
     
 
@@ -63,7 +83,7 @@ async def get_facility(facility_id: str):
             "sk": "Metadata"
         }
     )
-    
+
     if "Item" not in response:
         raise HTTPException(status_code=404, detail="Facility not found")
     
@@ -111,16 +131,26 @@ async def update_facility(facility_id: str, facility: FacilityUpdate):
             "updated_facility": result.get("Attributes", {})
         }
 
-    except HTTPException:
-        raise
-    except Exception as e:
+    except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error updating facility: {e}")
 
 
 
 @router.delete("/{facility_id}", description="Eliminar una instalación")
 async def delete_facility(facility_id: str):
-    #TODO
-    return {"message": f"Facility {facility_id} deleted"}
+    try:
+        response = table.get_item(
+            Key={"pk": f"FACILITY#{facility_id}", "sk": "Metadata"}
+        )
+
+        if "Item" not in response:
+            raise HTTPException(status_code=404, detail="Facility not found")
+
+        table.delete_item(
+            Key={"pk": f"FACILITY#{facility_id}", "sk": "Metadata"}
+        )
+
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting facility: {e}")
 
 

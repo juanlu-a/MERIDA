@@ -38,6 +38,17 @@ def _create_table_sync():
             AttributeDefinitions=[
                 {"AttributeName": "pk", "AttributeType": "S"},
                 {"AttributeName": "sk", "AttributeType": "S"},
+                {"AttributeName": "type", "AttributeType": "S"},  # 🔹 necesario para el GSI
+            ],
+            GlobalSecondaryIndexes=[
+                {
+                    "IndexName": "GSI_TypeIndex",
+                    "KeySchema": [
+                        {"AttributeName": "type", "KeyType": "HASH"},
+                        {"AttributeName": "pk", "KeyType": "RANGE"},
+                    ],
+                    "Projection": {"ProjectionType": "ALL"},
+                }
             ],
             BillingMode="PAY_PER_REQUEST",
         )
