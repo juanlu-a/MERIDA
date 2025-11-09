@@ -390,6 +390,12 @@ variable "ecs_log_retention_days" {
     default     = "merida-backend"
   }
 
+variable "ecr_create_repository" {
+  description = "Whether Terraform should create the ECR repository"
+  type        = bool
+  default     = true
+}
+
   variable "ecr_image_tag_mutability" {
     description = "ECR image tag mutability (MUTABLE or IMMUTABLE)"
     type        = string

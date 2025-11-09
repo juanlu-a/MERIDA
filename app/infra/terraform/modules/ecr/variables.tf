@@ -3,6 +3,12 @@ variable "repository_name" {
   type        = string
 }
 
+variable "create_repository" {
+  description = "Whether to create the ECR repository. Set to false when repository already exists."
+  type        = bool
+  default     = true
+}
+
 variable "image_tag_mutability" {
   description = "ECR tag mutability (MUTABLE/IMMUTABLE)"
   type        = string

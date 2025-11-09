@@ -43,7 +43,15 @@ output "internet_gateway_id" {
   value       = aws_internet_gateway.main.id
 }
 
-# NAT Gateway removed - using VPC Endpoints
+output "nat_gateway_id" {
+  description = "ID of the NAT Gateway"
+  value       = aws_nat_gateway.this.id
+}
+
+output "nat_eip_allocation_id" {
+  description = "Allocation ID of the Elastic IP assigned to the NAT Gateway"
+  value       = aws_eip.nat.id
+}
 
 output "public_route_table_id" {
   description = "ID of the public route table"
@@ -63,16 +71,6 @@ output "ecs_container_security_group_id" {
 output "ecs_container_security_group_name" {
   description = "Name of the ECS container security group"
   value       = aws_security_group.ecs_container.name
-}
-
-output "vpc_endpoints_security_group_id" {
-  description = "ID of the VPC endpoints security group"
-  value       = aws_security_group.vpc_endpoints.id
-}
-
-output "vpc_endpoints_security_group_name" {
-  description = "Name of the VPC endpoints security group"
-  value       = aws_security_group.vpc_endpoints.name
 }
 
 output "availability_zones" {
@@ -106,44 +104,3 @@ output "s3_endpoint_prefix_list_id" {
   description = "Prefix list ID of the S3 VPC endpoint"
   value       = aws_vpc_endpoint.s3.prefix_list_id
 }
-
-output "ecr_api_endpoint_id" {
-  description = "ID of the ECR API VPC endpoint"
-  value       = aws_vpc_endpoint.ecr_api.id
-}
-
-output "ecr_dkr_endpoint_id" {
-  description = "ID of the ECR DKR VPC endpoint"
-  value       = aws_vpc_endpoint.ecr_dkr.id
-}
-
-output "cloudwatch_logs_endpoint_id" {
-  description = "ID of the CloudWatch Logs VPC endpoint"
-  value       = aws_vpc_endpoint.cloudwatch_logs.id
-}
-
-output "eks_endpoint_id" {
-  description = "ID of the EKS VPC endpoint"
-  value       = aws_vpc_endpoint.eks.id
-}
-
-output "iot_data_endpoint_id" {
-  description = "ID of the IoT Core Data VPC endpoint. Note: Requires Route 53 Private Hosted Zone configuration for DNS resolution."
-  value       = aws_vpc_endpoint.iot_data.id
-}
-
-output "iot_data_endpoint_dns_names" {
-  description = "DNS names of the IoT Core Data VPC endpoint ENIs. Use these to create Route 53 A records."
-  value       = aws_vpc_endpoint.iot_data.dns_entry
-}
-
-output "iot_credentials_endpoint_id" {
-  description = "ID of the IoT Core Credentials VPC endpoint. Note: Requires Route 53 Private Hosted Zone configuration for DNS resolution."
-  value       = aws_vpc_endpoint.iot_credentials.id
-}
-
-output "iot_credentials_endpoint_dns_names" {
-  description = "DNS names of the IoT Core Credentials VPC endpoint ENIs. Use these to create Route 53 A records."
-  value       = aws_vpc_endpoint.iot_credentials.dns_entry
-}
-

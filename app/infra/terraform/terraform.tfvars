@@ -12,13 +12,13 @@ lambda_log_retention_days = 7
 # ZIP Deployment - Terraform empaqueta automáticamente
 # ====================================
 lambda_handler     = "app.lambda_handler"
-lambda_runtime     = "python3.11"  # python3.11 is available in GitHub Actions and AWS Lambda
+lambda_runtime     = "python3.10"  # Ajustado para coincidir con la versión instalada localmente
 lambda_source_path = "../lambdas/lambda_iot_handler"
 
 # Alert Processor Lambda Configuration
 alert_lambda_function_name      = "PlotAlertProcessor"
 alert_lambda_handler            = "app.lambda_handler"
-alert_lambda_runtime            = "python3.11"
+alert_lambda_runtime            = "python3.10"
 alert_lambda_source_path        = "../lambdas/lambda_alert_processor"
 alert_lambda_timeout            = 30
 alert_lambda_memory_size        = 256
@@ -63,7 +63,6 @@ ecs_enable_container_insights = false
 ecs_task_family               = "merida-task"
 ecs_container_name            = "merida-container"
 # Valor se sobrescribe desde .env (TF_VAR_ecs_container_image)
-ecs_container_image  = "000000000000.dkr.ecr.us-east-1.amazonaws.com/merida-backend:latest"
 ecs_container_cpu    = 256
 ecs_container_memory = 512
 ecs_container_port   = 80
@@ -94,6 +93,7 @@ ecs_log_retention_days               = 7
 
 # ECR Configuration
 ecr_repository_name      = "merida-backend"
+ecr_create_repository    = true
 ecr_image_tag_mutability = "MUTABLE"
 ecr_scan_on_push         = true
 ecr_encryption_type      = "AES256"
@@ -130,4 +130,4 @@ amplify_enable_pr_previews = false
 amplify_enable_auto_build  = true
 
 # API Configuration
-api_base_url = "http://localhost:8000" # Update with your API Gateway URL later
+api_base_url = "meridaproject.ddns.net" # Update with your API Gateway URL later

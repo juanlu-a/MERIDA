@@ -1,4 +1,5 @@
 resource "aws_ecr_repository" "this" {
+  count                = var.create_repository ? 1 : 0
   name                 = var.repository_name
   image_tag_mutability = var.image_tag_mutability
 
@@ -13,8 +14,21 @@ resource "aws_ecr_repository" "this" {
   tags = var.tags
 }
 
+data "aws_ecr_repository" "existing" {
+  count          = var.create_repository ? 0 : 1
+  name           = var.repository_name
+  registry_id    = null
+}
+
+locals {
+  repository_name = var.create_repository ? aws_ecr_repository.this[0].name : data.aws_ecr_repository.existing[0].name
+  repository_url  = var.create_repository ? aws_ecr_repository.this[0].repository_url : data.aws_ecr_repository.existing[0].repository_url
+  repository_arn  = var.create_repository ? aws_ecr_repository.this[0].arn : data.aws_ecr_repository.existing[0].arn
+}
+
 resource "aws_ecr_lifecycle_policy" "this" {
-  repository = aws_ecr_repository.this.name
+  count       = var.create_repository ? 1 : 0
+  repository  = local.repository_name
 
   policy = jsonencode({
     rules = [

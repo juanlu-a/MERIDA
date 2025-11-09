@@ -13,80 +13,6 @@ resource "aws_sns_topic" "alerts" {
 }
 
 ##############################################
-# IAM Role and Policies for Alert Processor Lambda
-##############################################
-data "aws_iam_policy_document" "lambda_alerts_assume" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "lambda_alerts" {
-  name               = "${var.alert_lambda_function_name}-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_alerts_assume.json
-
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.alert_lambda_function_name}-role"
-    }
-  )
-}
-
-data "aws_iam_policy_document" "lambda_alerts_policy" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = ["arn:aws:logs:*:*:*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:Query",
-      "dynamodb:DescribeTable"
-    ]
-    resources = [
-      module.dynamodb_table.table_arn,
-      "${module.dynamodb_table.table_arn}/index/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "sns:Publish"
-    ]
-    resources = [aws_sns_topic.alerts.arn]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "cognito-idp:ListUsers"
-    ]
-    resources = [module.cognito.user_pool_arn]
-  }
-}
-
-resource "aws_iam_role_policy" "lambda_alerts_inline" {
-  role   = aws_iam_role.lambda_alerts.id
-  policy = data.aws_iam_policy_document.lambda_alerts_policy.json
-}
-
-##############################################
 # Lambda Function - DynamoDB Stream Processor
 ##############################################
 module "lambda_alert_processor" {
@@ -103,7 +29,7 @@ module "lambda_alert_processor" {
   memory_size = var.alert_lambda_memory_size
 
   create_role = false
-  lambda_role = aws_iam_role.lambda_alerts.arn
+  lambda_role = var.lab_role_arn
 
   environment_variables = {
     DYNAMO_TABLE_NAME  = module.dynamodb_table.table_name
@@ -115,10 +41,6 @@ module "lambda_alert_processor" {
   cloudwatch_logs_retention_in_days = var.alert_lambda_log_retention_days
 
   tags = var.tags
-
-  depends_on = [
-    aws_iam_role_policy.lambda_alerts_inline
-  ]
 }
 
 ##############################################

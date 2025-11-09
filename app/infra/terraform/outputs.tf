@@ -106,7 +106,15 @@ output "internet_gateway_id" {
   value       = module.vpc.internet_gateway_id
 }
 
-# NAT Gateway removed - using VPC Endpoints
+output "nat_gateway_id" {
+  description = "ID of the NAT Gateway"
+  value       = module.vpc.nat_gateway_id
+}
+
+output "nat_eip_allocation_id" {
+  description = "Allocation ID of the NAT Gateway EIP"
+  value       = module.vpc.nat_eip_allocation_id
+}
 
 output "public_route_table_id" {
   description = "ID of the public route table"
@@ -126,16 +134,6 @@ output "ecs_container_security_group_id" {
 output "ecs_container_security_group_name" {
   description = "Name of the ECS container security group"
   value       = module.vpc.ecs_container_security_group_name
-}
-
-output "vpc_endpoints_security_group_id" {
-  description = "ID of the VPC endpoints security group"
-  value       = module.vpc.vpc_endpoints_security_group_id
-}
-
-output "vpc_endpoints_security_group_name" {
-  description = "Name of the VPC endpoints security group"
-  value       = module.vpc.vpc_endpoints_security_group_name
 }
 
 output "availability_zones" {
@@ -165,21 +163,6 @@ output "s3_endpoint_id" {
 output "s3_endpoint_prefix_list_id" {
   description = "Prefix list ID of the S3 VPC endpoint"
   value       = module.vpc.s3_endpoint_prefix_list_id
-}
-
-output "ecr_api_endpoint_id" {
-  description = "ID of the ECR API VPC endpoint"
-  value       = module.vpc.ecr_api_endpoint_id
-}
-
-output "ecr_dkr_endpoint_id" {
-  description = "ID of the ECR DKR VPC endpoint"
-  value       = module.vpc.ecr_dkr_endpoint_id
-}
-
-output "cloudwatch_logs_endpoint_id" {
-  description = "ID of the CloudWatch Logs VPC endpoint"
-  value       = module.vpc.cloudwatch_logs_endpoint_id
 }
 
 # ===========================================
