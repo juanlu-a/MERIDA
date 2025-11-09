@@ -14,6 +14,8 @@ resource "aws_dynamodb_table" "smart_grow_data" {
   billing_mode = var.billing_mode
   hash_key     = "PK"
   range_key    = "SK"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   # Primary Key attributes
   attribute {

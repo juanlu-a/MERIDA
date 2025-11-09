@@ -145,13 +145,21 @@ resource "aws_ecs_service" "this" {
 # ===========================================
 resource "aws_security_group" "alb" {
   name        = "${var.alb_name}-sg"
-  description = "ALB SG - allow HTTP from internet"
+  description = "ALB SG - allow HTTP/HTTPS from internet"
   vpc_id      = var.vpc_id
 
   ingress {
     description = "Allow HTTP from everyone"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS from everyone"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -230,6 +238,20 @@ resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this.arn
+  }
+}
+
+resource "aws_lb_listener" "https" {
+  count             = var.alb_certificate_arn != "" ? 1 : 0
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = var.alb_ssl_policy
+  certificate_arn   = var.alb_certificate_arn
 
   default_action {
     type             = "forward"

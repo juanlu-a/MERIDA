@@ -34,6 +34,66 @@ variable "lambda_log_retention_days" {
   default     = 7
 }
 
+variable "alert_lambda_function_name" {
+  description = "Name of the Lambda function that processes DynamoDB stream events"
+  type        = string
+  default     = "PlotAlertProcessor"
+}
+
+variable "alert_lambda_handler" {
+  description = "Lambda handler for the alert processor function"
+  type        = string
+  default     = "app.lambda_handler"
+}
+
+variable "alert_lambda_runtime" {
+  description = "Runtime for the alert processor Lambda"
+  type        = string
+  default     = "python3.11"
+}
+
+variable "alert_lambda_source_path" {
+  description = "Source path for the alert processor Lambda code"
+  type        = string
+  default     = "../lambdas/lambda_alert_processor"
+}
+
+variable "alert_lambda_timeout" {
+  description = "Timeout in seconds for the alert processor Lambda"
+  type        = number
+  default     = 30
+}
+
+variable "alert_lambda_memory_size" {
+  description = "Memory size in MB for the alert processor Lambda"
+  type        = number
+  default     = 256
+}
+
+variable "alert_lambda_log_retention_days" {
+  description = "CloudWatch Logs retention in days for the alert processor Lambda"
+  type        = number
+  default     = 14
+}
+
+variable "alert_lambda_tolerance" {
+  description = "Tolerance factor (as a decimal) applied when comparing measurements against ideal values"
+  type        = number
+  default     = 0.1
+}
+
+variable "alert_lambda_batch_size" {
+  description = "Maximum number of stream records to process per Lambda invocation"
+  type        = number
+  default     = 10
+}
+
+variable "alerts_sns_topic_name" {
+  description = "SNS topic name used to deliver facility alert emails"
+  type        = string
+  default     = "merida-alerts-topic"
+}
+
 variable "lambda_timeout" {
   description = "Lambda timeout in seconds"
   type        = number
@@ -248,6 +308,18 @@ variable "ecs_alb_enable_deletion_protection" {
   default     = false
 }
 
+variable "ecs_alb_certificate_arn" {
+  description = "ACM certificate ARN for the ECS ALB HTTPS listener. Leave empty to disable HTTPS."
+  type        = string
+  default     = ""
+}
+
+variable "ecs_alb_ssl_policy" {
+  description = "SSL policy to use on the ECS ALB HTTPS listener"
+  type        = string
+  default     = "ELBSecurityPolicy-2016-08"
+}
+
 variable "ecs_execution_role_arn" {
   description = "ARN of the Task Execution role (used by ECS to pull images / write logs). Leave empty to use lab_role_arn"
   type        = string
@@ -308,45 +380,45 @@ variable "ecs_log_retention_days" {
   default     = 7
 }
 
-# ===========================================
-# ECR Configuration
-# ===========================================
+  # ===========================================
+  # ECR Configuration
+  # ===========================================
 
-variable "ecr_repository_name" {
-  description = "Name of the ECR repository for backend image"
-  type        = string
-  default     = "merida-backend"
-}
+  variable "ecr_repository_name" {
+    description = "Name of the ECR repository for backend image"
+    type        = string
+    default     = "merida-backend"
+  }
 
-variable "ecr_image_tag_mutability" {
-  description = "ECR image tag mutability (MUTABLE or IMMUTABLE)"
-  type        = string
-  default     = "MUTABLE"
-}
+  variable "ecr_image_tag_mutability" {
+    description = "ECR image tag mutability (MUTABLE or IMMUTABLE)"
+    type        = string
+    default     = "MUTABLE"
+  }
 
-variable "ecr_scan_on_push" {
-  description = "Scan images on push to ECR"
-  type        = bool
-  default     = true
-}
+  variable "ecr_scan_on_push" {
+    description = "Scan images on push to ECR"
+    type        = bool
+    default     = true
+  }
 
-variable "ecr_encryption_type" {
-  description = "ECR encryption type (AES256 or KMS)"
-  type        = string
-  default     = "AES256"
-}
+  variable "ecr_encryption_type" {
+    description = "ECR encryption type (AES256 or KMS)"
+    type        = string
+    default     = "AES256"
+  }
 
-variable "ecr_image_count" {
-  description = "Number of tagged images to keep in ECR"
-  type        = number
-  default     = 10
-}
+  variable "ecr_image_count" {
+    description = "Number of tagged images to keep in ECR"
+    type        = number
+    default     = 10
+  }
 
-variable "ecr_untagged_image_days" {
-  description = "Number of days to keep untagged images in ECR"
-  type        = number
-  default     = 7
-}
+  variable "ecr_untagged_image_days" {
+    description = "Number of days to keep untagged images in ECR"
+    type        = number
+    default     = 7
+  }
 
 # ===========================================
 # Cognito Variables

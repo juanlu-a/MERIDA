@@ -31,6 +31,21 @@ output "lambda_cloudwatch_log_group" {
   value       = module.lambda_iot_handler.lambda_cloudwatch_log_group_name
 }
 
+output "alert_lambda_function_arn" {
+  description = "ARN of the DynamoDB stream alert processor Lambda"
+  value       = module.lambda_alert_processor.lambda_function_arn
+}
+
+output "alert_lambda_function_name" {
+  description = "Name of the DynamoDB stream alert processor Lambda"
+  value       = module.lambda_alert_processor.lambda_function_name
+}
+
+output "alerts_sns_topic_arn" {
+  description = "ARN of the SNS topic used for alert notifications"
+  value       = aws_sns_topic.alerts.arn
+}
+
 # IoT Rule
 output "iot_rule_arn" {
   description = "ARN of the IoT rule"

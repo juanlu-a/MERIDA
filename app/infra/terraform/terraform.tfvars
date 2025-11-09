@@ -15,6 +15,17 @@ lambda_handler     = "app.lambda_handler"
 lambda_runtime     = "python3.11"  # python3.11 is available in GitHub Actions and AWS Lambda
 lambda_source_path = "../lambdas/lambda_iot_handler"
 
+# Alert Processor Lambda Configuration
+alert_lambda_function_name      = "PlotAlertProcessor"
+alert_lambda_handler            = "app.lambda_handler"
+alert_lambda_runtime            = "python3.11"
+alert_lambda_source_path        = "../lambdas/lambda_alert_processor"
+alert_lambda_timeout            = 30
+alert_lambda_memory_size        = 256
+alert_lambda_log_retention_days = 14
+alert_lambda_tolerance          = 0.1
+alert_lambda_batch_size         = 10
+
 # AWS Academy LabRole ARN
 # For AWS Academy, the role ARN should be: arn:aws:iam::<ACCOUNT_ID>:role/LabRole
 # This value can be overridden from environment with TF_VAR_lab_role_arn
@@ -67,6 +78,9 @@ ecs_create_alb                       = true
 ecs_alb_name                         = "merida-alb"
 ecs_alb_idle_timeout                 = 60
 ecs_alb_enable_deletion_protection   = false
+ecs_alb_certificate_arn              = "arn:aws:acm:us-east-1:037689899742:certificate/9f83fde6-4a25-434f-9cfd-55735a43d70a"
+# ecs_alb_ssl_policy puede ajustarse si es necesario
+ecs_alb_ssl_policy                   = "ELBSecurityPolicy-2016-08"
 ecs_execution_role_arn               = "" # Usa lab_role_arn por defecto
 ecs_task_role_arn                    = "" # Usa lab_role_arn por defecto
 ecs_health_check_enabled             = true

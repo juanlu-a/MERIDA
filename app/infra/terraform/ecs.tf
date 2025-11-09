@@ -41,6 +41,8 @@ module "ecs" {
   alb_subnet_ids                 = module.vpc.public_subnet_ids
   alb_idle_timeout               = var.ecs_alb_idle_timeout
   alb_enable_deletion_protection = var.ecs_alb_enable_deletion_protection
+  alb_certificate_arn            = var.ecs_alb_certificate_arn
+  alb_ssl_policy                 = var.ecs_alb_ssl_policy
 
   # Health Check Configuration
   health_check_enabled             = var.ecs_health_check_enabled

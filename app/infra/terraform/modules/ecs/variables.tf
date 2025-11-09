@@ -170,6 +170,18 @@ variable "alb_enable_deletion_protection" {
   default     = false
 }
 
+variable "alb_certificate_arn" {
+  description = "ACM certificate ARN to attach to the HTTPS listener. Leave empty to skip HTTPS."
+  type        = string
+  default     = ""
+}
+
+variable "alb_ssl_policy" {
+  description = "SSL policy to use for the HTTPS listener"
+  type        = string
+  default     = "ELBSecurityPolicy-2016-08"
+}
+
 # ===========================================
 # Health Check Configuration
 # ===========================================

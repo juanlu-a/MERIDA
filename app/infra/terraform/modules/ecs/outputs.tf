@@ -93,6 +93,11 @@ output "alb_listener_arn" {
   value       = aws_lb_listener.http.arn
 }
 
+output "alb_https_listener_arn" {
+  description = "ARN of the HTTPS ALB listener (empty if HTTPS disabled)"
+  value       = try(aws_lb_listener.https[0].arn, "")
+}
+
 # ===========================================
 # Target Group Outputs
 # ===========================================

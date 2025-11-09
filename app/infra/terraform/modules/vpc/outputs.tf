@@ -122,3 +122,28 @@ output "cloudwatch_logs_endpoint_id" {
   value       = aws_vpc_endpoint.cloudwatch_logs.id
 }
 
+output "eks_endpoint_id" {
+  description = "ID of the EKS VPC endpoint"
+  value       = aws_vpc_endpoint.eks.id
+}
+
+output "iot_data_endpoint_id" {
+  description = "ID of the IoT Core Data VPC endpoint. Note: Requires Route 53 Private Hosted Zone configuration for DNS resolution."
+  value       = aws_vpc_endpoint.iot_data.id
+}
+
+output "iot_data_endpoint_dns_names" {
+  description = "DNS names of the IoT Core Data VPC endpoint ENIs. Use these to create Route 53 A records."
+  value       = aws_vpc_endpoint.iot_data.dns_entry
+}
+
+output "iot_credentials_endpoint_id" {
+  description = "ID of the IoT Core Credentials VPC endpoint. Note: Requires Route 53 Private Hosted Zone configuration for DNS resolution."
+  value       = aws_vpc_endpoint.iot_credentials.id
+}
+
+output "iot_credentials_endpoint_dns_names" {
+  description = "DNS names of the IoT Core Credentials VPC endpoint ENIs. Use these to create Route 53 A records."
+  value       = aws_vpc_endpoint.iot_credentials.dns_entry
+}
+

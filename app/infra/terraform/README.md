@@ -7,7 +7,7 @@ Infrastructure as Code for the MERIDA Smart Grow IoT Platform using Terraform.
 The infrastructure consists of the following AWS services:
 
 - **DynamoDB** - Single-table design for storing IoT data and user information
-- **Lambda** - Processes messages from IoT devices
+- **Lambda** - Processes IoT ingestion and DynamoDB stream alerts
 - **IoT Core** - MQTT topic rules for device communication
 - **Cognito** - User authentication and authorization
 - **Amplify** - Frontend hosting and deployment
@@ -132,6 +132,29 @@ modules/
 └── s3/          - S3 buckets (future)
 ```
 
+### Lambda Functions
+
+- **IoT Handler (`lambda_iot_handler`)**  
+  Receives MQTT payloads from IoT Core, normalizes the message and stores it in the `SmartGrowData` DynamoDB table using the single-table design.
+
+- **Alert Processor (`lambda_alert_processor`)**  
+  Subscribed to the DynamoDB stream of `SmartGrowData`. When a new plot state (`PK = PLOT#<id>`, `SK = STATE#<timestamp>`) is inserted, it:
+  1. Reads the live measurements (temperature, humidity, light, irrigation, etc.).
+  2. Fetches the ideal parameters for the species (`PK = FACILITY#<facility_id>`, `SK = SPECIES#<id>`).
+  3. Applies the tolerance defined by `alert_lambda_tolerance` (default ±10%).
+  4. If a deviation exists, lists all Cognito users and publishes an email alert through the `merida-alerts-topic` SNS topic.
+
+Environment variables injected by Terraform:
+
+| Variable            | Description                                                    |
+|---------------------|----------------------------------------------------------------|
+| `DYNAMO_TABLE_NAME` | DynamoDB table name (SmartGrowData)                            |
+| `USER_POOL_ID`      | Cognito User Pool ID used to fetch user emails                 |
+| `ALERTS_TOPIC_ARN`  | SNS topic that delivers alert emails                           |
+| `TOLERANCE_PERCENT` | Decimal tolerance applied to compare live vs. ideal readings   |
+
+IAM permissions granted to the alert processor Lambda allow it to query DynamoDB, list Cognito users, publish to SNS, and write CloudWatch Logs.
+
 ### Cognito Module
 
 Creates a Cognito User Pool with:
@@ -168,7 +191,31 @@ terraform output amplify_app_url
 
 # Get DynamoDB table name
 terraform output dynamodb_table_name
+
+# Get alert processing resources
+terraform output alert_lambda_function_name
+terraform output alerts_sns_topic_arn
 ```
+
+## DynamoDB Table Structure
+
+La tabla `SmartGrowData` sigue un diseño de tabla única. Las claves principales (`PK`, `SK`) y atributos auxiliares se reutilizan para múltiples tipos de entidad:
+
+| Caso de uso                               | `PK` ejemplo              | `SK` ejemplo                      | Comentarios clave |
+|-------------------------------------------|---------------------------|-----------------------------------|-------------------|
+| Estado de una parcela (ingestión IoT)     | `PLOT#<plot_id>`          | `STATE#<timestamp>`               | Contiene lecturas como `temperature`, `humidity`, `light`, `irrigation`, `SpeciesId`, `FacilityId`, además de `Timestamp`. |
+| Eventos asociados (riego, etc.)           | `PLOT#<plot_id>`          | `EVENT#<timestamp>`               | Prefija atributos específicos (`irrigation_amount`, etc.). |
+| Parámetros ideales por especie/facilidad  | `FACILITY#<facility_id>`  | `SPECIES#<species_id>`            | Atributos como `IdealTemperature`, `IdealHumidity`, `IdealLight`, `IdealIrrigation`. El Lambda de alertas consulta estos valores. |
+| Perfil global de especie (fallback)       | `SPECIES#<species_id>`    | `PROFILE`                         | Útil cuando no hay registro específico por instalación. |
+| Relación negocio → instalaciones/usuarios | `BUSINESS#<business_id>`  | `FACILITY#<facility_id>`          | Puede almacenar colecciones de usuarios (`Users`) u otros metadatos del negocio. |
+
+Índices secundarios:
+
+- `GSI_PK` / `GSI_SK`: permiten consultas adicionales. Por ejemplo, las mediciones IoT guardan `GSI_PK = FACILITY#<facility_id>` y `GSI_SK = TIMESTAMP#<timestamp>` para obtener históricos por instalación ordenados por tiempo.
+
+Streams y automatizaciones:
+
+- La tabla tiene **DynamoDB Streams** habilitado (`NEW_AND_OLD_IMAGES`). El módulo `lambda_alert_processor` se activa en cada `INSERT` de estados (`STATE#`) para verificar desviaciones y publicar alertas por SNS/Cognito.
 
 ## Updating Frontend Configuration
 
