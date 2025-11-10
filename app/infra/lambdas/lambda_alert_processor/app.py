@@ -398,7 +398,7 @@ def _publish_alert(
 
     # Use plot name if available, otherwise use short ID
     plot_display = plot_name if plot_name else f"Plot {plot_id[:8]}"
-    subject = f"🚨 [MERIDA Alert] {plot_display} - Values Out of Range"
+    subject = f"[MERIDA Alert] {plot_display} - Values Out of Range"
 
     # Map metric keys to display names with units
     metric_info = {
@@ -431,9 +431,9 @@ def _publish_alert(
         if lower is not None and upper is not None:
             range_desc = f"{lower:.1f} - {upper:.1f}{info['unit']}"
         elif lower is not None:
-            range_desc = f"≥ {lower:.1f}{info['unit']}"
+            range_desc = f">= {lower:.1f}{info['unit']}"
         elif upper is not None:
-            range_desc = f"≤ {upper:.1f}{info['unit']}"
+            range_desc = f"<= {upper:.1f}{info['unit']}"
         else:
             range_desc = "undefined"
         
@@ -447,18 +447,13 @@ def _publish_alert(
             deviation_desc = f" ({diff:.1f}{info['unit']} below minimum)"
         
         lines.append(
-            f"  • {info['name']}: {actual:.1f}{info['unit']}{deviation_desc}"
+            f"  - {info['name']}: {actual:.1f}{info['unit']}{deviation_desc}"
         )
         lines.append(f"    Allowed range: {range_desc}")
         lines.append("")
 
-    lines.extend(
-        [
-            "---",
-            "This alert was sent to the following recipients:",
-            ", ".join(recipients),
-        ]
-    )
+    lines.append("---")
+    lines.append("This is an automated alert from the MERIDA monitoring system.")
 
     message = "\n".join(lines)
 
