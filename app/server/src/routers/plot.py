@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from boto3.dynamodb.conditions import Key, Attr
 from src.schemas.facilities import FacilityBase, FacilityCreate, FacilityRead, FacilityUpdate
-from src.schemas.plot import PlotBase, PlotCreate, PlotRead, PlotUpdate
+from src.schemas.plot import PlotBase, PlotCreate, PlotUpdate
 from src.dal.database import table
 from uuid import uuid4
 from botocore.exceptions import ClientError
@@ -43,6 +43,9 @@ async def get_plots():
                 }
             )
             plots.extend(response.get("Items", []))
+        
+        if not plots:
+            raise HTTPException(status_code=404, detail="No plots found")
 
         return {"count": len(plots), "plots": plots}
 
@@ -75,15 +78,15 @@ async def get_plots_by_facility(facility_id: str):
             "plots": plots
         }
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error obteniendo las parcelas de la instalación: {e}")
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Error obtaining plots for the facility: {e}")
 
 @router.post("/", description="Crear una nueva parcela")
-async def create_plot(facility_id: str, plot: PlotCreate):
+async def create_plot(plot: PlotCreate):
     try:
         # Verificar que la instalación exista
         response = table.get_item(
-            Key={"pk": f"FACILITY#{facility_id}", "sk": "Metadata"}
+            Key={"pk": f"FACILITY#{plot.facility_id}", "sk": "Metadata"}
         )
 
         if "Item" not in response:
@@ -92,17 +95,22 @@ async def create_plot(facility_id: str, plot: PlotCreate):
         plot_id = str(uuid4())
 
         item = {
-            "pk": f"FACILITY#{facility_id}",
+            "pk": f"FACILITY#{plot.facility_id}",
             "sk": f"PLOT#{plot_id}",
+            "facility_id": plot.facility_id,
             "plot_id": plot_id,
             "type": "PLOT",
             "name": plot.name,
             "location": plot.location,
-            "mac_address": plot.mac_address
+            "mac_address": plot.mac_address,
+            "species": plot.species if plot.species else "unknown",
         }
 
         table.put_item(Item=item)
-        return {"message": "Plot created"}
+        return {
+            "message": "Plot created successfully",
+            "created_plot": item
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating plot: {e}")
@@ -121,13 +129,32 @@ async def get_plot(plot_id: str):
     
     return response.get("Item")
 
-@router.put("/{plot_id}", description="Actualizar una parcela") #put o patch?
+#@router.put("/{plot_id}", description="Actualizar una parcela") #put o patch?
 async def update_plot(plot_id: str):
     #TODO
     return {"message": f"Plot {plot_id} updated"}
 
 @router.delete("/{plot_id}", description="Eliminar una parcela")
-async def delete_plot(plot_id: str):
-    #TODO
-    return {"message": f"Plot {plot_id} deleted"}
+async def delete_plot(plot_id: str, facility_id: str):
+    try:
+        response = table.get_item(
+            Key={
+                "pk": f"FACILITY#{facility_id}",
+                "sk": f"PLOT#{plot_id}"
+            }
+        )
 
+        if "Item" not in response:
+            raise HTTPException(status_code=404, detail="Plot not found")
+
+        table.delete_item(
+            Key={
+                "pk": f"FACILITY#{facility_id}",
+                "sk": f"PLOT#{plot_id}"
+            }
+        )
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting plot: {e}") 
+    
+    facility_name = response['Item'].get('facility_id', 'unknown facility') if 'Item' in response else "unknown facility"
+    return {"message": f"Plot {plot_id} from {facility_name} deleted successfully"}

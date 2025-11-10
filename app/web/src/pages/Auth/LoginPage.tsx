@@ -215,16 +215,12 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 flex w-full justify-center rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="hover:bg-primary-700 focus:ring-primary-500 flex w-full justify-center rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-400"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </div>
       </form>
-
-      <div className="mt-6 text-center text-sm text-gray-600">
-        <p>Demo: Use your AWS Cognito credentials</p>
-      </div>
     </div>
   )
 }

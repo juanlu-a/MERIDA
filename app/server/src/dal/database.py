@@ -1,35 +1,28 @@
 import os
 import boto3
+import asyncio
+from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 load_dotenv()
 
-TABLE_NAME = os.environ.get("DYNAMO_TABLE_NAME", "SmartGrowData")
-REGION = os.environ.get("AWS_REGION", "us-east-1")
-
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(TABLE_NAME)
-
-
-import boto3
-import asyncio
-from botocore.exceptions import ClientError
-import os
-
 TABLE_NAME = os.getenv("DYNAMO_TABLE_NAME")
+dynamodb_resource = boto3.resource('dynamodb')
+table = dynamodb_resource.Table(TABLE_NAME)
+
 REGION = os.getenv("AWS_REGION", "us-east-1")
 
-dynamodb = boto3.client("dynamodb", region_name=REGION)
+dynamodb_client = boto3.client("dynamodb", region_name=REGION)
 
 def _create_table_sync():
     """Función bloqueante que usa boto3 para crear la tabla si no existe."""
     try:
-        tables = dynamodb.list_tables()["TableNames"]
+        tables = dynamodb_client.list_tables()["TableNames"]
         if TABLE_NAME in tables:
             print(f"✅ Tabla '{TABLE_NAME}' ya existe.")
             return
 
         print(f"⚙️ Creando tabla '{TABLE_NAME}'...")
-        dynamodb.create_table(
+        dynamodb_client.create_table(
             TableName=TABLE_NAME,
             KeySchema=[
                 {"AttributeName": "pk", "KeyType": "HASH"},
@@ -38,7 +31,8 @@ def _create_table_sync():
             AttributeDefinitions=[
                 {"AttributeName": "pk", "AttributeType": "S"},
                 {"AttributeName": "sk", "AttributeType": "S"},
-                {"AttributeName": "type", "AttributeType": "S"},  # 🔹 necesario para el GSI
+                {"AttributeName": "type", "AttributeType": "S"},   # 🔹 necesario para el GSI_TypeIndex
+                {"AttributeName": "species", "AttributeType": "S"}, # 🔹 necesario para el GSI_Specie
             ],
             GlobalSecondaryIndexes=[
                 {
@@ -48,13 +42,21 @@ def _create_table_sync():
                         {"AttributeName": "pk", "KeyType": "RANGE"},
                     ],
                     "Projection": {"ProjectionType": "ALL"},
-                }
+                },
+                {
+                    "IndexName": "GSI_SpeciesPlots",
+                    "KeySchema": [
+                        {"AttributeName": "species", "KeyType": "HASH"},
+                        {"AttributeName": "pk", "KeyType": "RANGE"},
+                    ],
+                    "Projection": {"ProjectionType": "ALL"},
+                },
             ],
             BillingMode="PAY_PER_REQUEST",
         )
 
         # Espera a que la tabla esté activa
-        waiter = dynamodb.get_waiter("table_exists")
+        waiter = dynamodb_client.get_waiter("table_exists")
         waiter.wait(TableName=TABLE_NAME)
         print(f"✅ Tabla '{TABLE_NAME}' creada correctamente.")
 
@@ -64,4 +66,3 @@ def _create_table_sync():
 async def init_db():
     """Versión asíncrona que no bloquea FastAPI."""
     await asyncio.to_thread(_create_table_sync)
-

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from botocore.exceptions import ClientError
 import json
 from boto3.dynamodb.conditions import Key, Attr
-from src.schemas.facilities import FacilityBase, FacilityCreate, FacilityRead, FacilityUpdate
+from src.schemas.facilities import FacilityCreate, FacilityUpdate
 from src.dal.database import table
 from uuid import uuid4
 """
@@ -152,5 +152,3 @@ async def delete_facility(facility_id: str):
 
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error deleting facility: {e}")
-
-

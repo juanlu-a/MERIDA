@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -7,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
 import logging
 from contextlib import asynccontextmanager
-from src.routers import facilities, irrigations, plot, sensors, states, recommended_irrigation, user  
+from src.routers import facilities, irrigations, plot, sensors, recommended_irrigation, user, species  
 from src.dal.database import table 
 import os
 from fastapi.middleware.cors import CORSMiddleware
@@ -65,10 +66,10 @@ logger.info("🚀🪴 API de MERIDA iniciada. DynamoDB listo para recibir consul
 app.include_router(facilities.router)
 app.include_router(irrigations.router)
 app.include_router(plot.router)
-app.include_router(recommended_irrigation.router)
+#app.include_router(recommended_irrigation.router)
 app.include_router(sensors.router)
-app.include_router(states.router)
-app.include_router(user.router)
+app.include_router(species.router)
+#app.include_router(user.router)
 
 @app.get("/")
 def read_root():

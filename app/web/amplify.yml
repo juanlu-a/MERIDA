@@ -3,10 +3,11 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - npm install -g pnpm@latest
+        - pnpm install --frozen-lockfile
     build:
       commands:
-        - npm run build
+        - pnpm run build
   artifacts:
     baseDirectory: dist
     files:
@@ -14,3 +15,4 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+      - ~/.pnpm-store/**/*
