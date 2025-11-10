@@ -7,8 +7,8 @@
 set -e
 
 AWS_REGION="us-east-1"
-LAMBDA_IOT_HANDLER="merida-iot-handler"
-LAMBDA_ALERT_PROCESSOR="lambda_alert_processor"
+LAMBDA_IOT_HANDLER="Lambda-IoT-Handler"
+LAMBDA_ALERT_PROCESSOR="PlotAlertProcessor"
 
 # Colores para output
 RED='\033[0;31m'

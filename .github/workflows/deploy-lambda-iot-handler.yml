@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  LAMBDA_FUNCTION_NAME: merida-iot-handler
+  LAMBDA_FUNCTION_NAME: Lambda-IoT-Handler
 
 jobs:
   deploy:

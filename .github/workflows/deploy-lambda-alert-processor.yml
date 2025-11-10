@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  LAMBDA_FUNCTION_NAME: lambda_alert_processor
+  LAMBDA_FUNCTION_NAME: PlotAlertProcessor
 
 jobs:
   deploy:
