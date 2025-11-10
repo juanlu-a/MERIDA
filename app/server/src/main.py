@@ -34,7 +34,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     swagger_favicon_url="src/static/plant.ico",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False  # Deshabilitar redirects automáticos de trailing slash
 )
 
 # CORS Configuration - Allow all origins

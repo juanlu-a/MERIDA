@@ -202,6 +202,19 @@ npm install
 npm run dev
 ```
 
+**Deploy a S3:**
+```bash
+cd app/web
+npm run build
+aws s3 sync dist/ s3://merida-frontend-static-123456/ --delete
+aws s3 website s3://merida-frontend-static-123456/ --index-document index.html --error-document index.html
+```
+
+**URLs:**
+- Desarrollo: `http://localhost:5173`
+- Producción S3: `http://merida-frontend-static-123456.s3-website-us-east-1.amazonaws.com`
+- API Backend: `https://meridaproject.ddns.net`
+
 Ver documentación completa en [app/web/README.md](app/web/README.md)
 
 ### 6. CI/CD (GitHub Actions)

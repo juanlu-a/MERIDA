@@ -3,7 +3,7 @@ import type { Facility, PlotMetadata, CreateFacilityRequest } from '@/types'
 
 export const facilityService = {
   getFacilities: async (): Promise<Facility[]> => {
-    const response = await apiClient.get('/facilities')
+    const response = await apiClient.get('/facilities/')
     return response.data.facilities || []
   },
   getFacility: async (facilityId: string): Promise<Facility> => {
@@ -11,7 +11,7 @@ export const facilityService = {
     return response.data
   },
   createFacility: async (data: CreateFacilityRequest): Promise<any> => {
-    const response = await apiClient.post('/facilities', data)
+    const response = await apiClient.post('/facilities/', data)
     return response.data
   },
   getFacilityPlots: async (facilityId: string): Promise<PlotMetadata[]> => {

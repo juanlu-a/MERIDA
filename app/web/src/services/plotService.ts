@@ -16,7 +16,7 @@ export const plotService = {
 
   // Create a new plot
   createPlot: async (data: CreatePlotRequest): Promise<PlotMetadata> => {
-    const response = await apiClient.post('/plots', data)
+    const response = await apiClient.post('/plots/', data)
     return response.data
   },
 
