@@ -28,7 +28,7 @@ RESPONSIBLE_ATTRIBUTES: Sequence[str] = (
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     """
-    Synchrnise SNS toic subscriptions with the list of responsible emails saved in DynamoDB.
+    Synchrnise SNS topic subscriptions with the list of responsible emails saved in DynamoDB.
 
     Triggered by DynamoDB Streams on records where PK starts with BUSINESS# and SK with FACILITY#.
     """

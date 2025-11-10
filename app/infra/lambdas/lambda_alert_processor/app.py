@@ -358,14 +358,14 @@ def _publish_alert(
     }
 
     lines = [
-        "⚠️  ALERT: Environmental Values Out of Tolerance Range",
+        "ALERT: Environmental Values Out of Tolerance Range",
         "",
-        f"📍 Facility: {facility_name}",
-        f"🌱 Plot: {plot_display}",
-        f"🔬 Species: {species_id or 'Unknown'}",
-        f"🕒 Timestamp: {timestamp or datetime.utcnow().isoformat()}",
+        f"Facility: {facility_name}",
+        f"Plot: {plot_display}",
+        f"Species: {species_id or 'Unknown'}",
+        f"Timestamp: {timestamp or datetime.utcnow().isoformat()}",
         "",
-        "📊 Metrics Outside Tolerance:",
+        "Metrics Outside Tolerance:",
         "",
     ]
 
