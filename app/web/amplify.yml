@@ -1,18 +1,21 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - npm install -g pnpm@latest
-        - pnpm install --frozen-lockfile
-    build:
-      commands:
-        - pnpm run build
-  artifacts:
-    baseDirectory: dist
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
-      - ~/.pnpm-store/**/*
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd app/web
+            - npm install -g pnpm@latest
+            - pnpm install --frozen-lockfile
+        build:
+          commands:
+            - pnpm run build
+      artifacts:
+        baseDirectory: app/web/dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - app/web/node_modules/**/*
+          - ~/.pnpm-store/**/*
+    appRoot: app/web

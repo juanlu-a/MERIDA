@@ -93,16 +93,16 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const comment = `✅ **Frontend build successful!**
+            const comment = \`✅ **Frontend build successful!**
 
             The frontend code has been validated:
             - ✅ Linting passed
             - ✅ Type checking passed  
             - ✅ Build succeeded
 
-            **Note:** After merging to \`main\`, AWS Amplify will automatically deploy the changes.
+            **Note:** After merging to \\\`main\\\`, AWS Amplify will automatically deploy the changes.
 
-            *Commit: ${context.sha.substring(0, 7)}*`;
+            *Commit: \${context.sha.substring(0, 7)}*\`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -111,113 +111,9 @@ jobs:
               body: comment
             });
 
-  deploy:
-    name: Deploy to Amplify
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup AWS CLI
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: ./build
-
-      - name: Install Amplify CLI
+      - name: Success message
+        if: github.ref == 'refs/heads/main'
         run: |
-          npm install -g @aws-amplify/cli@latest
-
-      - name: Get Amplify App ID
-        id: get-app-id
-        run: |
-          APP_ID=$(aws amplify list-apps --query "apps[?name=='${{ env.AMPLIFY_APP_NAME }}'].appId | [0]" --output text)
-          echo "app-id=$APP_ID" >> $GITHUB_OUTPUT
-          echo "Found Amplify App ID: $APP_ID"
-
-      - name: Trigger Amplify Deployment
-        id: trigger-deploy
-        run: |
-          # Start a new job/deployment in Amplify
-          JOB_ID=$(aws amplify start-job \
-            --app-id ${{ steps.get-app-id.outputs.app-id }} \
-            --branch-name main \
-            --job-type RELEASE \
-            --query 'jobSummary.jobId' \
-            --output text)
-
-          echo "Started Amplify deployment with Job ID: $JOB_ID"
-          echo "job-id=$JOB_ID" >> $GITHUB_OUTPUT
-
-      - name: Wait for deployment completion
-        id: wait-deployment
-        run: |
-          JOB_ID="${{ steps.trigger-deploy.outputs.job-id }}"
-          APP_ID="${{ steps.get-app-id.outputs.app-id }}"
-
-          echo "Waiting for deployment to complete..."
-
-          # Wait up to 10 minutes for deployment
-          timeout=600
-          elapsed=0
-
-          while [ $elapsed -lt $timeout ]; do
-            STATUS=$(aws amplify get-job \
-              --app-id $APP_ID \
-              --branch-name main \
-              --job-id $JOB_ID \
-              --query 'job.summary.status' \
-              --output text)
-            
-            echo "Deployment status: $STATUS"
-            
-            if [ "$STATUS" = "SUCCEED" ]; then
-              echo "✅ Deployment completed successfully!"
-              echo "status=success" >> $GITHUB_OUTPUT
-              break
-            elif [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "CANCELLED" ]; then
-              echo "❌ Deployment failed with status: $STATUS"
-              echo "status=failed" >> $GITHUB_OUTPUT
-              exit 1
-            fi
-            
-            sleep 30
-            elapsed=$((elapsed + 30))
-          done
-
-          if [ $elapsed -ge $timeout ]; then
-            echo "⏰ Deployment timed out after 10 minutes"
-            echo "status=timeout" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-      - name: Get Amplify App URL
-        if: steps.wait-deployment.outputs.status == 'success'
-        run: |
-          APP_URL=$(aws amplify get-app \
-            --app-id ${{ steps.get-app-id.outputs.app-id }} \
-            --query 'app.defaultDomain' \
-            --output text)
-
-          echo "🚀 Frontend deployed successfully!"
-          echo "📍 App URL: https://$APP_URL"
-          echo "📊 Amplify Console: https://console.aws.amazon.com/amplify/home?region=${{ env.AWS_REGION }}#/${{ steps.get-app-id.outputs.app-id }}"
-
-      - name: Deployment notification
-        if: always()
-        run: |
-          if [ "${{ steps.wait-deployment.outputs.status }}" = "success" ]; then
-            echo "✅ MERIDA Smart Grow frontend deployed successfully to AWS Amplify!"
-          else
-            echo "❌ Frontend deployment failed. Check the logs above."
-          fi
+          echo "✅ Frontend build validated successfully!"
+          echo "🚀 AWS Amplify will automatically deploy this to production."
+          echo "📊 Monitor deployment in Amplify Console"
