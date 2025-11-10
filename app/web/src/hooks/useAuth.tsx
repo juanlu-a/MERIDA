@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { signIn, signOut, getCurrentUser, confirmSignIn } from 'aws-amplify/auth'
+import { Amplify } from 'aws-amplify'
 
 interface User {
   username: string
@@ -54,6 +55,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     attributes?: Record<string, string>
   ): Promise<LoginResult> {
     try {
+      // Inspect runtime config and local cache before attempting sign-in
+      const cfg = Amplify.getConfig()?.Auth?.Cognito
+      console.info('[Auth] Config at login time:', cfg)
+      const cognitoKeys = Object.keys(localStorage).filter((k) =>
+        k.includes('CognitoIdentityServiceProvider'),
+      )
+      if (cognitoKeys.length) {
+        console.info('[Auth] Found Cognito cache keys before login:', cognitoKeys)
+      }
+      // Proactively clear Cognito cache to avoid stale pool/client artifacts
+      cognitoKeys.forEach((k) => localStorage.removeItem(k))
+      Object.keys(sessionStorage)
+        .filter((k) => k.includes('CognitoIdentityServiceProvider'))
+        .forEach((k) => sessionStorage.removeItem(k))
+
       // Check if there's already an active session and sign out first
       try {
         const currentUser = await getCurrentUser()
