@@ -394,7 +394,7 @@ variable "ecr_create_repository" {
   description = "Whether Terraform should create the ECR repository"
   type        = bool
   default     = true
-}
+  }
 
   variable "ecr_image_tag_mutability" {
     description = "ECR image tag mutability (MUTABLE or IMMUTABLE)"
@@ -511,4 +511,4 @@ variable "api_base_url" {
   description = "Base URL for the backend API (will be passed to frontend as VITE_API_BASE_URL)"
   type        = string
   default     = "http://localhost:8000"
-}
+  }

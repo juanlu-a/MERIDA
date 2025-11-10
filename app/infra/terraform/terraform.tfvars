@@ -63,12 +63,14 @@ ecs_enable_container_insights = false
 ecs_task_family               = "merida-task"
 ecs_container_name            = "merida-container"
 # Valor se sobrescribe desde .env (TF_VAR_ecs_container_image)
+ecs_container_image  = "037689899742.dkr.ecr.us-east-1.amazonaws.com/merida-backend:latest"
 ecs_container_cpu    = 256
 ecs_container_memory = 512
-ecs_container_port   = 80
+ecs_container_port   = 8000
 ecs_container_environment = [
   { name = "AWS_REGION", value = "us-east-1" },
   { name = "DYNAMODB_TABLE", value = "SmartGrowData" },
+  { name = "DYNAMO_TABLE_NAME", value = "SmartGrowData" },
   { name = "LOG_GROUP", value = "/ecs/merida-backend" },
 ]
 ecs_service_name                     = "merida-service"
@@ -99,7 +101,6 @@ ecr_scan_on_push         = true
 ecr_encryption_type      = "AES256"
 ecr_image_count          = 10
 ecr_untagged_image_days  = 7
-
 # Tags
 tags = {
   Environment = "dev"
