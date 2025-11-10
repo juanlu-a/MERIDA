@@ -210,6 +210,17 @@ function PlotDetails({ plot }: { plot: PlotMetadata }) {
   const { data: lastIrrigation, isLoading: irrigationLoading, error: irrigationError } = useLastIrrigation(plot.plot_id)
   const { data: allIrrigations } = useIrrigations(plot.plot_id)
 
+  // Debug logs
+  console.log('=== PLOT DETAILS DEBUG ===')
+  console.log('Plot ID:', plot.plot_id)
+  console.log('Current State:', currentState)
+  console.log('State Loading:', stateLoading)
+  console.log('State Error:', stateError)
+  console.log('History:', history)
+  console.log('History Loading:', historyLoading)
+  console.log('History Error:', historyError)
+  console.log('========================')
+
   // Check if it's a 404 error (no data yet)
   const is404 = stateError && (stateError as any).response?.status === 404
   

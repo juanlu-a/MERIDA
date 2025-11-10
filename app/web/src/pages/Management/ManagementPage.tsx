@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Building2, Plus, MapPin, Sprout, CheckCircle, AlertCircle } from 'lucide-react'
-import { useFacilities, useCreateFacility, useFacilityPlots, useCreatePlot } from '@/hooks/useQueries'
+import { useFacilities, useCreateFacility, useFacilityPlots, useCreatePlot, useSpecies, useCreateSpecies } from '@/hooks/useQueries'
 import type { Facility, CreateFacilityRequest, CreatePlotRequest } from '@/types'
 
 export function ManagementPage() {
@@ -373,8 +373,12 @@ function CreatePlotForm({
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [customSpeciesMode, setCustomSpeciesMode] = useState(false)
+  const [customSpeciesName, setCustomSpeciesName] = useState('')
 
   const createMutation = useCreatePlot()
+  const createSpeciesMutation = useCreateSpecies()
+  const { data: speciesList, isLoading: speciesLoading } = useSpecies()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -395,7 +399,20 @@ function CreatePlotForm({
       return
     }
 
+    if (customSpeciesMode && !customSpeciesName.trim()) {
+      setError('Please enter a species name')
+      return
+    }
+
     try {
+      // Si está en modo custom, crear la especie primero
+      if (customSpeciesMode && customSpeciesName.trim()) {
+        console.log('🌱 Creating new species:', customSpeciesName)
+        await createSpeciesMutation.mutateAsync({ name: customSpeciesName.trim() })
+        // Actualizar formData con el nombre de la nueva especie
+        formData.species = customSpeciesName.trim()
+      }
+
       console.log('🔍 Creating plot with data:', formData)
       await createMutation.mutateAsync(formData)
       setSuccess(true)
@@ -405,7 +422,7 @@ function CreatePlotForm({
     } catch (err: any) {
       console.error('❌ Error creating plot:', err)
       console.error('📦 Error response:', err.response?.data)
-      setError(err.response?.data?.detail || 'Failed to create plot')
+      setError(err.response?.data?.detail || 'Failed to create plot or species')
     }
   }
 
@@ -473,16 +490,56 @@ function CreatePlotForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Species
+              Species (optional)
             </label>
-            <input
-              type="text"
-              value={formData.species}
-              onChange={(e) => setFormData({ ...formData, species: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="e.g., Tomato"
-              disabled={createMutation.isPending || success}
-            />
+            <select
+              value={customSpeciesMode ? '__custom__' : formData.species}
+              onChange={(e) => {
+                const value = e.target.value
+                if (value === '__custom__') {
+                  setCustomSpeciesMode(true)
+                  setFormData({ ...formData, species: '' })
+                } else {
+                  setCustomSpeciesMode(false)
+                  setCustomSpeciesName('')
+                  setFormData({ ...formData, species: value })
+                }
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              disabled={createMutation.isPending || success || speciesLoading}
+            >
+              <option value="">No species (generic thresholds)</option>
+              {speciesLoading ? (
+                <option disabled>Loading species...</option>
+              ) : (
+                <>
+                  {speciesList?.map((species) => (
+                    <option key={species.pk} value={species.name}>
+                      {species.name}
+                    </option>
+                  ))}
+                  <option value="__custom__">✨ Create new species...</option>
+                </>
+              )}
+            </select>
+            
+            {/* Input de texto para especie personalizada */}
+            {customSpeciesMode && (
+              <input
+                type="text"
+                value={customSpeciesName}
+                onChange={(e) => setCustomSpeciesName(e.target.value)}
+                className="mt-2 w-full px-4 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Enter new species name (e.g., Tomato)"
+                disabled={createMutation.isPending || success}
+              />
+            )}
+            
+            <p className="text-xs text-gray-500 mt-1">
+              {customSpeciesMode 
+                ? 'Enter a name for the new species. It will be created automatically.'
+                : 'If no species is selected, generic default thresholds will be created'}
+            </p>
           </div>
 
           <div>

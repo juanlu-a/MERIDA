@@ -37,6 +37,7 @@ router = APIRouter(prefix="/plots", tags=["Parcelas"])
 def _create_default_thresholds(plot_id: str, facility_id: str, species_id: str):
     """
     Crea umbrales por defecto para un plot desde los umbrales de la especie.
+    Si la especie no tiene umbrales configurados, crea umbrales genéricos por defecto.
     Los umbrales se crean con umbral_enabled=False (desactivados).
     """
     # Buscar umbrales de la especie (primero facility-specific, luego global)
@@ -69,11 +70,6 @@ def _create_default_thresholds(plot_id: str, facility_id: str, species_id: str):
         except ClientError:
             pass
     
-    # Si no hay umbrales de especie, no crear nada
-    if not species_thresholds:
-        print(f"No thresholds found for species {species_id}, skipping default threshold creation")
-        return
-    
     # Crear umbrales del plot con umbral_enabled=False
     plot_thresholds = {
         "pk": f"PLOT#{plot_id}",
@@ -85,7 +81,7 @@ def _create_default_thresholds(plot_id: str, facility_id: str, species_id: str):
         "umbral_enabled": False,  # Desactivado por defecto
     }
     
-    # Copiar umbrales de la especie
+    # Copiar umbrales de la especie si existen
     threshold_fields = [
         "MinTemperature", "MaxTemperature",
         "MinHumidity", "MaxHumidity",
@@ -93,13 +89,28 @@ def _create_default_thresholds(plot_id: str, facility_id: str, species_id: str):
         "MinIrrigation", "MaxIrrigation"
     ]
     
-    for field in threshold_fields:
-        if field in species_thresholds:
-            plot_thresholds[field] = species_thresholds[field]
+    if species_thresholds:
+        # Copiar umbrales de la especie
+        for field in threshold_fields:
+            if field in species_thresholds:
+                plot_thresholds[field] = species_thresholds[field]
+        print(f"Created default thresholds for plot {plot_id} from species {species_id} (umbral_enabled=False)")
+    else:
+        # Crear umbrales genéricos por defecto
+        plot_thresholds.update({
+            "MinTemperature": Decimal("15.0"),
+            "MaxTemperature": Decimal("30.0"),
+            "MinHumidity": Decimal("40.0"),
+            "MaxHumidity": Decimal("80.0"),
+            "MinLight": Decimal("3000.0"),
+            "MaxLight": Decimal("20000.0"),
+            "MinIrrigation": Decimal("0.0"),
+            "MaxIrrigation": Decimal("100.0"),
+        })
+        print(f"No thresholds found for species {species_id}, created generic default thresholds for plot {plot_id} (umbral_enabled=False)")
     
     # Guardar en DynamoDB
     table.put_item(Item=plot_thresholds)
-    print(f"Created default thresholds for plot {plot_id} from species {species_id} (umbral_enabled=False)")
 
 @router.get("/", description="Obtener todas las parcelas")
 async def get_plots():
@@ -200,13 +211,13 @@ async def create_plot(plot: PlotCreate):
 
         table.put_item(Item=item)
         
-        # Crear umbrales por defecto desde la especie (si existe)
-        if plot.species:
-            try:
-                _create_default_thresholds(plot_id, plot.facility_id, plot.species)
-            except Exception as e:
-                # No fallar la creación del plot si no hay umbrales de especie
-                print(f"Warning: Could not create default thresholds: {e}")
+        # SIEMPRE crear umbrales por defecto (desde la especie o genéricos)
+        try:
+            species_for_thresholds = plot.species if plot.species else "generic"
+            _create_default_thresholds(plot_id, plot.facility_id, species_for_thresholds)
+        except Exception as e:
+            # No fallar la creación del plot si falla la creación de thresholds
+            print(f"Warning: Could not create default thresholds: {e}")
         
         # Convertir Decimals a float/int para JSON
         item_converted = convert_decimals(item)

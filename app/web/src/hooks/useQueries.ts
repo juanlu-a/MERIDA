@@ -3,6 +3,7 @@ import { plotService } from '@/services/plotService'
 import { userService } from '@/services/userService'
 import { facilityService } from '@/services/facilityService'
 import { irrigationService } from '@/services/irrigationService'
+import { speciesService } from '@/services/speciesService'
 import type { CreatePlotRequest, UpdatePlotRequest, CreateFacilityRequest } from '@/types'
 
 // User queries
@@ -188,5 +189,25 @@ export function useFacilityIrrigations(facilityId: string, date?: string) {
     queryKey: ['facilityIrrigations', facilityId, date],
     queryFn: () => irrigationService.getFacilityIrrigations(facilityId, date),
     enabled: !!facilityId,
+  })
+}
+
+// Species queries
+export function useSpecies() {
+  return useQuery({
+    queryKey: ['species'],
+    queryFn: () => speciesService.getSpecies(),
+  })
+}
+
+// Species mutations
+export function useCreateSpecies() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: { name: string }) => speciesService.createSpecies(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['species'] })
+    },
   })
 }

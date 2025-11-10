@@ -66,10 +66,11 @@ def extract_plot_id_from_event(event):
 
 
 def get_plot_metadata(plot_id):
-    """Fetch plot metadata from DynamoDB to get facility_id"""
+    """Fetch plot metadata from DynamoDB to get facility_id, species, and name"""
     try:
-        # Query to find the plot - we need to search across facilities
-        # Try direct query first with PLOT# prefix
+        print(f"Fetching metadata for plot_id: {plot_id}")
+        
+        # Method 1: Try GSI_TypeIndex query with filter
         response = table.query(
             IndexName='GSI_TypeIndex',
             KeyConditionExpression='#type = :type',
@@ -85,13 +86,43 @@ def get_plot_metadata(plot_id):
         items = response.get('Items', [])
         if items:
             plot = items[0]
-            return {
+            metadata = {
                 'facility_id': plot.get('facility_id'),
                 'species': plot.get('species'),
                 'name': plot.get('name')
             }
+            print(f"Found metadata via GSI: {metadata}")
+            return metadata
+        
+        # Method 2: Scan with filter (less efficient but works if GSI fails)
+        print(f"GSI query returned no results, trying scan...")
+        response = table.scan(
+            FilterExpression='plot_id = :plot_id AND #type = :type',
+            ExpressionAttributeNames={'#type': 'type'},
+            ExpressionAttributeValues={
+                ':plot_id': plot_id,
+                ':type': 'PLOT'
+            },
+            Limit=1
+        )
+        
+        items = response.get('Items', [])
+        if items:
+            plot = items[0]
+            metadata = {
+                'facility_id': plot.get('facility_id'),
+                'species': plot.get('species'),
+                'name': plot.get('name')
+            }
+            print(f"Found metadata via scan: {metadata}")
+            return metadata
+        
+        print(f"No metadata found for plot_id: {plot_id}")
+        
     except Exception as e:
         print(f"Error fetching plot metadata for {plot_id}: {e}")
+        import traceback
+        traceback.print_exc()
     
     return None
 
@@ -186,7 +217,9 @@ def format_for_dynamodb(payload, plot_id):
         if source_key in payload and payload[source_key] not in (None, ''):
             item[target_key] = convert_scalar(payload[source_key])
 
-    # Default PlotId metadata for convenience
+    # Add plot_id (snake_case) for backend compatibility
+    item['plot_id'] = plot_id
+    # Also keep PlotId (PascalCase) for backwards compatibility
     item['PlotId'] = plot_id
 
     # Set facility-based GSI partition key if available
