@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cfg = Amplify.getConfig()?.Auth?.Cognito
       console.info('[Auth] Config at login time:', cfg)
       const cognitoKeys = Object.keys(localStorage).filter((k) =>
-        k.includes('CognitoIdentityServiceProvider'),
+        k.includes('CognitoIdentityServiceProvider')
       )
       if (cognitoKeys.length) {
         console.info('[Auth] Found Cognito cache keys before login:', cognitoKeys)
