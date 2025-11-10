@@ -1,7 +1,7 @@
 # Lambda deployment artifacts
 package/
 *.zip
-lambda_*.zip
+lambda_alert_processor.zip
 
 # Python
 __pycache__/
@@ -10,3 +10,18 @@ __pycache__/
 *.so
 .Python
 
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

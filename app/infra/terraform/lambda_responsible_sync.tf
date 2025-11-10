@@ -42,19 +42,15 @@ resource "aws_lambda_event_source_mapping" "responsible_sync_stream" {
         eventName = ["INSERT", "MODIFY", "REMOVE"]
         dynamodb = {
           Keys = {
-            PK = {
-              S = [
-                {
-                  prefix = "BUSINESS#"
-                }
-              ]
-            }
-            SK = {
+            pk = {
               S = [
                 {
                   prefix = "FACILITY#"
                 }
               ]
+            }
+            sk = {
+              S = ["RESPONSIBLES"]
             }
           }
         }

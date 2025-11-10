@@ -87,6 +87,21 @@ def _process_plot_state(item: Dict[str, Any]) -> bool:
     # Fetch plot-specific thresholds
     plot_thresholds = _fetch_plot_thresholds(plot_id)
     
+    # If still no facility_id, try to get it from plot thresholds
+    if not facility_id and plot_thresholds:
+        facility_id = plot_thresholds.get("facility_id") or plot_thresholds.get("FacilityId")
+        if facility_id:
+            logger.info("Retrieved facility_id %s from plot thresholds", facility_id)
+    
+    # Last resort: fetch from plot metadata
+    if not facility_id:
+        logger.warning("facility_id not found in item, fetching from plot metadata")
+        plot_metadata = _fetch_plot_metadata_by_id(plot_id)
+        if plot_metadata:
+            facility_id = plot_metadata.get("facility_id")
+            if facility_id:
+                logger.info("Retrieved facility_id %s from plot metadata", facility_id)
+    
     if not plot_thresholds:
         logger.info("No thresholds configured for plot %s, skipping alert evaluation", plot_id)
         return True
@@ -156,6 +171,42 @@ def _fetch_plot_metadata(plot_id: Any, facility_id: Any) -> Dict[str, Any]:
             return {}
     except ClientError as error:
         logger.error("Failed to fetch plot metadata: %s", error)
+        return {}
+
+
+def _fetch_plot_metadata_by_id(plot_id: Any) -> Dict[str, Any]:
+    """
+    Retrieve plot metadata using only plot_id by querying GSI_TypeIndex.
+    Used as fallback when facility_id is not available.
+    """
+    if not plot_id:
+        logger.warning("Cannot fetch plot metadata without plot_id")
+        return {}
+    
+    try:
+        # Query using GSI_TypeIndex with filter on plot_id
+        response = table.query(
+            IndexName='GSI_TypeIndex',
+            KeyConditionExpression='#type = :type',
+            FilterExpression='plot_id = :plot_id',
+            ExpressionAttributeNames={'#type': 'type'},
+            ExpressionAttributeValues={
+                ':type': 'PLOT',
+                ':plot_id': plot_id
+            },
+            Limit=1
+        )
+        
+        items = response.get('Items', [])
+        if items:
+            logger.info("Found plot metadata via GSI for plot %s", plot_id)
+            return items[0]
+        
+        logger.warning("Plot metadata not found for plot_id %s", plot_id)
+        return {}
+    
+    except ClientError as error:
+        logger.error("Failed to fetch plot metadata by id: %s", error)
         return {}
 
 

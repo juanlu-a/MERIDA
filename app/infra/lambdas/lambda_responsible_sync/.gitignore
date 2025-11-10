@@ -1,7 +1,7 @@
 # Lambda deployment artifacts
 package/
 *.zip
-lambda_iot_handler.zip
+lambda_responsible_sync.zip
 
 # Python
 __pycache__/
@@ -25,3 +25,4 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+

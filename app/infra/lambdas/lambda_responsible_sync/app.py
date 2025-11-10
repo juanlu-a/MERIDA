@@ -28,9 +28,11 @@ RESPONSIBLE_ATTRIBUTES: Sequence[str] = (
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     """
-    Synchrnise SNS topic subscriptions with the list of responsible emails saved in DynamoDB.
+    Synchronise SNS topic subscriptions with the list of responsible emails saved in DynamoDB.
 
-    Triggered by DynamoDB Streams on records where PK starts with BUSINESS# and SK with FACILITY#.
+    Triggered by DynamoDB Streams on records where:
+    - PK = FACILITY#{facility_id}
+    - SK = RESPONSIBLES
     """
     logger.info("Received %d stream records", len(event.get("Records", [])))
 
@@ -45,16 +47,19 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
             logger.debug("Record without pk/sk, skipping: %s", record)
             continue
 
-        business_id = pk.split("#", maxsplit=1)[-1]
-        facility_id = sk.split("#", maxsplit=1)[-1]
+        # New structure: PK = FACILITY#{facility_id}, SK = RESPONSIBLES
+        if not pk.startswith("FACILITY#") or sk != "RESPONSIBLES":
+            logger.debug("Record does not match FACILITY#/RESPONSIBLES pattern, skipping")
+            continue
+
+        facility_id = pk.split("#", maxsplit=1)[-1]
 
         new_emails = _extract_emails(dynamodb_record.get("NewImage"))
         old_emails = _extract_emails(dynamodb_record.get("OldImage"))
 
         logger.info(
-            "Processing %s for business=%s facility=%s (new=%s old=%s)",
+            "Processing %s for facility=%s (new=%s old=%s)",
             event_name,
-            business_id,
             facility_id,
             sorted(new_emails),
             sorted(old_emails),

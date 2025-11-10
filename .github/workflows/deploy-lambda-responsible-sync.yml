@@ -1,0 +1,82 @@
+name: Deploy Lambda Responsible Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/infra/lambdas/lambda_responsible_sync/**'
+      - '.github/workflows/deploy-lambda-responsible-sync.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  LAMBDA_FUNCTION_NAME: ResponsibleSubscriptionSync
+
+jobs:
+  deploy:
+    name: Build and Deploy Lambda Responsible Sync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install dependencies
+        working-directory: app/infra/lambdas/lambda_responsible_sync
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -t package/
+
+      - name: Copy Lambda function code
+        working-directory: app/infra/lambdas/lambda_responsible_sync
+        run: |
+          cp app.py package/
+
+      - name: Create deployment package
+        working-directory: app/infra/lambdas/lambda_responsible_sync/package
+        run: |
+          zip -r ../lambda_responsible_sync.zip .
+
+      - name: Upload deployment package to Lambda
+        working-directory: app/infra/lambdas/lambda_responsible_sync
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --zip-file fileb://lambda_responsible_sync.zip
+
+      - name: Wait for Lambda update to complete
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
+
+      - name: Publish new Lambda version
+        run: |
+          VERSION=$(aws lambda publish-version \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --query 'Version' \
+            --output text)
+          echo "Published Lambda version: $VERSION"
+
+      - name: Deployment summary
+        run: |
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function:** ${{ env.LAMBDA_FUNCTION_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Lambda function updated successfully!" >> $GITHUB_STEP_SUMMARY
+
