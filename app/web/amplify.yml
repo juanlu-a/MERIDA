@@ -8,10 +8,10 @@ applications:
             - pnpm install --frozen-lockfile
         build:
           commands:
-            - echo "Building with API URL: $VITE_API_BASE_URL"
-            - echo "Cognito UserPoolId: $VITE_COGNITO_USER_POOL_ID"
-            - echo "Cognito ClientId: $VITE_COGNITO_CLIENT_ID"
-            - echo "AWS Region: $VITE_AWS_REGION"
+            - 'echo "Building with API URL: $VITE_API_BASE_URL"'
+            - 'echo "Cognito UserPoolId: $VITE_COGNITO_USER_POOL_ID"'
+            - 'echo "Cognito ClientId: $VITE_COGNITO_CLIENT_ID"'
+            - 'echo "AWS Region: $VITE_AWS_REGION"'
             - 'if [ -z "$VITE_COGNITO_USER_POOL_ID" ] || [ -z "$VITE_COGNITO_CLIENT_ID" ]; then echo "ERROR: Missing required Cognito env vars (VITE_COGNITO_USER_POOL_ID, VITE_COGNITO_CLIENT_ID)"; exit 1; else echo "Cognito env vars present"; fi'
             - pnpm run build
       artifacts:
